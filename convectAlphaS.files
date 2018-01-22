@@ -1,0 +1,17 @@
+basicexceptions.C
+basicexceptions.h
+exeuler.C
+exeuler.h
+exrk4.C
+exrk4.h
+fun_inicjaliz.C
+fun_inicjaliz.h
+funkcje.C
+implicit.C
+implicit.h
+ustawienia.h
+funkcje.h
+Make/files
+Make/options
+convectAlphaS.C
+createFields.H

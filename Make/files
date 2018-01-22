@@ -1,0 +1,8 @@
+convectAlphaS.C
+funkcje.C
+exeuler.C
+exrk4.C
+implicit.C
+fun_inicjaliz.C
+
+EXE = $(FOAM_USER_APPBIN)/convectAlphaS2D

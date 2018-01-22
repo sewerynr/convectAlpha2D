@@ -1,0 +1,7 @@
+SOURCE = \
+convectAlphaS.C \
+funkcje.C \
+exeuler.C \
+exrk4.C \
+implicit.C \
+fun_inicjaliz.C 
