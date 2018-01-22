@@ -31,5 +31,6 @@ void exEuler(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimensi
         runTime.write(); // wszystko z AUTO_WRITE
         ++runTime;
     }
+
     Info<< "Norma 1 = " << phiR << endl;
 }
