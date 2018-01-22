@@ -184,18 +184,18 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
         ),
         T
     );
-//    volScalarField TSt
-//    (
-//        IOobject
-//        (
-//            "TSt",
-//            runTime.timeName(),
-//            mesh,
-//            IOobject::NO_READ,
-//            IOobject::NO_WRITE
-//        ),
-//        T
-//    );
+    volScalarField TSt
+    (
+        IOobject
+        (
+            "TSt",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        T
+    );
 
     volScalarField LaplaceTW1D
         (
@@ -220,7 +220,7 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
                 IOobject::NO_READ,
                 IOobject::AUTO_WRITE
             ),
-            - (1./(4.*epsH*epsH))*Foam::tanh(Psi/(2.*epsH))*(1.-Foam::tanh(Psi/(2.*epsH))*Foam::tanh(Psi/(2.*epsH)))
+                - ( Foam::tanh(Psi/(2.0*epsH)) - Foam::tanh(Psi/(2.0*epsH))*Foam::tanh(Psi/(2.0*epsH))*Foam::tanh(Psi/(2.0*epsH)) )/(4*epsH*epsH)
          );
 
     surfaceScalarField surfgradT
