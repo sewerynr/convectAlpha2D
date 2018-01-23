@@ -353,15 +353,33 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
     { Info << ex.wyjatek << endl; }
 
     double dx = 1./ilePkt;
-    int nr = 0;
+    double norm1_grad_pkt = 0.;
+    double norm1_grad_pkt_1TW = 0.;
     forAll(mesh.cellCentres(), cellI )
     {
         if ( (mesh.cellCentres()[cellI].y() > 0) && (mesh.cellCentres()[cellI].y() < dx) )
         {
-            f << mesh.cellCentres()[cellI].x() << " "<< T[cellI] << " " << TAnalit[cellI] << " "  << gradTanalit[cellI] << " " << magGradT[cellI] << " " <<GradTW[cellI] << " " << LaplaceAnalit[cellI] << " " << LaplaceTW1D[cellI] << " " << LaplaceTStraignt[cellI] << " " << TSt[cellI] << std::endl;
-            nr++;
+            norm1_grad_pkt_1TW = Foam::mag(gradTanalit[cellI]-GradTW[cellI])/(Foam::mag(gradTanalit[cellI])+eps);
+            norm1_grad_pkt = Foam::mag(gradTanalit[cellI]-magGradT[cellI])/(Foam::mag(gradTanalit[cellI])+eps);
+            f << mesh.cellCentres()[cellI].x() << " "<< T[cellI] << " " << TAnalit[cellI] << " "  << gradTanalit[cellI] << " " << magGradT[cellI] << " " <<GradTW[cellI] << " " << LaplaceAnalit[cellI] << " " << LaplaceTW1D[cellI] << " " << LaplaceTStraignt[cellI] << " " << TSt[cellI] << " " << norm1_grad_pkt_1TW << " " << norm1_grad_pkt << std::endl;
         }
     }
     f.close();
+
+   std::ofstream newFile(sciezka + "AnalizaZbierz.vtk", std::ios_base::app);
+
+       if(newFile.is_open())
+       {
+           double norm1 = Foam::sum(Foam::mag(TAnalit-T)).value() / T.size();
+           double norm2 = Foam::pow(Foam::sum(Foam::pow(TAnalit-T, 2)).value(), 0.5 ) / T.size();
+           double norm3 = Foam::max(Foam::mag(TAnalit-T)).value();
+
+           newFile << ilePktStr << " " << norm1 << " " << norm1 << " " << norm2 << " " << norm2 << " " << norm3 << " " << norm3 << std::endl;
+       }
+       else
+       {
+           //You're in trouble now Mr!
+       }
+       newFile.close();
 
 }
