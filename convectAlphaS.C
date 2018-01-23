@@ -40,10 +40,10 @@ int main(int argc, char *argv[])
     dimensionedScalar dtau( "dTau", explicitSolver ? dimTime : dimless, epsH.value() / pardatu );
 
 //    InitPsiXYZ(Psi, mesh, funInitPsi2); //2D
-    InitPsiXYZ(Psi, mesh, funInitPsi1); //1D
+    InitPsiXYZ(Psi, mesh, funInitPsi1_06); //1D
     //InitT(T, Psi, mesh, epsH, funInitT3, par);      //bez inicjalizacji brzegu, Gaussian kropla
 //    InitT(T, Psi, mesh, epsH, funInitT4, par);      // inijalizacja alpha(psi) 2D
-    InitT(T, Psi, mesh, epsH, funInitT1, par);      //1D
+    InitT(T, Psi, mesh, epsH, funInitT1, par);      //1Dr
     //    InitTB(T, Psi, mesh, epsH, funInitT3, par);
     runTime.write();
     Info << "dx =  " << Foam::pow(Foam::average(mesh.cellVolumes()), one/3.) << endl;

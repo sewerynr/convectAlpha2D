@@ -14,6 +14,8 @@ scalar funInitT4( double Psi, const dimensionedScalar& epsH, double par, const d
 
 scalar funInitPsi1( double x, double y, double z );
 
+scalar funInitPsi1_06( double x, double y, double z );
+
 scalar funInitPsi2( double x, double y, double z );
 
 vector funInitV1( double x, double y, double z );

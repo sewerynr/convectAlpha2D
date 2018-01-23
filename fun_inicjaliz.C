@@ -40,6 +40,14 @@ scalar funInitPsi1( double x, double y, double z )
     return ret;
 }
 
+scalar funInitPsi1_06( double x, double y, double z )
+{
+    scalar ret = 0.;
+    ret = x + 0.1;
+    return ret;
+}
+
+
 scalar funInitPsi2( double x, double y, double z )
 {
     scalar ret = 0.;
