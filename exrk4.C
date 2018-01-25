@@ -33,7 +33,7 @@ void LimitGradPsi(const fvMesh& mesh, const volScalarField & Psi, volScalarField
 {
     forAll( mesh.cellCentres(), cellId)
     {
-        if( (Psi[cellId] > 20*dx) || (Psi[cellId] < -20*dx) )
+        if( (Psi[cellId] > 34*dx) || (Psi[cellId] < -34*dx) )
         {
             gradPsi[cellId] = 1.;
         }
@@ -47,7 +47,7 @@ void LimitGradPsi(const fvMesh& mesh, const volScalarField & Psi, volScalarField
 
         forAll(patch, faceId) // petla po centrach objetosci danego patcha
         {
-            if ( (PsiPatch[faceId]  > 20*dx) || (PsiPatch[faceId] < -20*dx) )
+            if ( (PsiPatch[faceId]  > 34*dx) || (PsiPatch[faceId] < -34*dx) )
             {
                 gradPsiPatch[faceId] = 1.;
             }
@@ -94,6 +94,7 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
         PsiZero2(T, PsiZero, eps, epsH, gamma);
 
     surfaceScalarField phiR = createPhiFieldExC(C, runTime, mesh, T, Psi, PsiZero);
+
     volScalarField gradPsi
     (
         IOobject
@@ -287,13 +288,13 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
 
         Told == T;
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  )  & mesh.Sf();
+        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
         k1 = T + fvc::div(phiR)*dtau;
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  )  & mesh.Sf();
+        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
         k2 = 3./4* T + 1./4* k1 + 1./4* fvc::div(phiR)*dtau;
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  )  & mesh.Sf();
+        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
         T = 1./3*T + 2./3*k2 + 2./3*fvc::div(phiR)*dtau;
 
         if (limitFieldT)
@@ -317,9 +318,10 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
         Info << "Norma 1 = " << norm1c << endl;
 
         magGradT = mag(fvc::grad(T));
-        GradTW = T*(1.-T)*mag(fvc::grad(PsiZero))/epsH;
+        GradTW = T*(1.-T)*gradPsi/epsH;
         LaplaceTStraignt = fvc::laplacian(T);
         LaplaceTW1D = T*(1.-T)*( fvc::laplacian(PsiZero) + (1./epsH)*( fvc::grad(PsiZero)&fvc::grad(PsiZero) )*(1.-2.*T) )/epsH;
+        gradTanalit =  mag( ( one - Foam::tanh(Psi/(2*epsH))*Foam::tanh(Psi/(2*epsH)) )*(1/(4*epsH)) );
 
         double norm1 = Foam::sum(Foam::mag(TAnalit-T)).value() / T.size();
         double norm2 = Foam::pow(Foam::sum(Foam::pow(TAnalit-T, 2)).value(), 0.5 ) / T.size();
@@ -359,8 +361,8 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
     {
         if ( (mesh.cellCentres()[cellI].y() > 0) && (mesh.cellCentres()[cellI].y() < dx) )
         {
-            norm1_grad_pkt_1TW = Foam::mag(gradTanalit[cellI]-GradTW[cellI])/(Foam::mag(gradTanalit[cellI])+eps);
-            norm1_grad_pkt = Foam::mag(gradTanalit[cellI]-magGradT[cellI])/(Foam::mag(gradTanalit[cellI])+eps);
+            norm1_grad_pkt_1TW = Foam::mag( gradTanalit[cellI] - GradTW[cellI] ) / ( Foam::mag( gradTanalit[cellI] ) + eps );
+            norm1_grad_pkt = Foam::mag( gradTanalit[cellI] - magGradT[cellI] ) / ( Foam::mag( gradTanalit[cellI] ) + eps );
             f << mesh.cellCentres()[cellI].x() << " "<< T[cellI] << " " << TAnalit[cellI] << " "  << gradTanalit[cellI] << " " << magGradT[cellI] << " " <<GradTW[cellI] << " " << LaplaceAnalit[cellI] << " " << LaplaceTW1D[cellI] << " " << LaplaceTStraignt[cellI] << " " << TSt[cellI] << " " << norm1_grad_pkt_1TW << " " << norm1_grad_pkt << std::endl;
         }
     }
