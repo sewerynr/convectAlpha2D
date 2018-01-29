@@ -5,6 +5,7 @@
 
 dimensionedScalar SMALL_NUMBER("small", dimless, SMALL);
 
+
 void updateGradPsi(const fvMesh& mesh, const volScalarField & Psi, volScalarField & gradPsi)
 {
     gradPsi == mag(fvc::grad(Psi));
