@@ -1,2 +1,7 @@
 .
 Make
+
+/opt/openfoam4/src/finiteVolume/lnInclude/
+/opt/openfoam4/src/meshTools/lnInclude/
+/opt/openfoam4/src/sampling/lnInclude/
+/opt/openfoam4/src/OpenFOAM/include/

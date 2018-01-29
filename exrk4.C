@@ -33,7 +33,7 @@ void LimitGradPsi(const fvMesh& mesh, const volScalarField & Psi, volScalarField
 {
     forAll( mesh.cellCentres(), cellId)
     {
-        if( (Psi[cellId] > 34*dx) || (Psi[cellId] < -34*dx) )
+        if( (Psi[cellId] > 14*dx) || (Psi[cellId] < -14*dx) )
         {
             gradPsi[cellId] = 1.;
         }
@@ -47,9 +47,10 @@ void LimitGradPsi(const fvMesh& mesh, const volScalarField & Psi, volScalarField
 
         forAll(patch, faceId) // petla po centrach objetosci danego patcha
         {
-            if ( (PsiPatch[faceId]  > 34*dx) || (PsiPatch[faceId] < -34*dx) )
+            if ( (PsiPatch[faceId]  > 14*dx) || (PsiPatch[faceId] < -14*dx) )
             {
                 gradPsiPatch[faceId] = 1.;
+//                Info << PsiPatch[faceId] << endl;
             }
         }
     }
@@ -85,8 +86,8 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
     Info<< "Explicit RK3 !!! "  << endl;
     scalar one(1);
 
-    if (limitFieldT)
-        limitT(T);
+//    if (limitFieldT)
+//        limitT(T);
 
     if (mapFunLog)
         PsiZero1(T, PsiZero, eps, epsH, gamma);
@@ -249,6 +250,9 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
         ),
         T*(1.-T)*mag(fvc::grad(PsiZero))/epsH
     );
+    TAnalit = 0.5*(1.+Foam::tanh(Psi/(2.*epsH)));
+
+
 
     Told == T;
 
@@ -259,28 +263,49 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
     volScalarField k1 = createKField("k1", runTime, mesh);
 
     k1 =  T + fvc::div(phiR)*dtau;
-    phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  )  & mesh.Sf();
+
+    limitT(k1);
+    PsiZero1(k1, PsiZero, eps, epsH, gamma);
+    gradPsi = mag(fvc::grad(PsiZero));
+
+    updateGradPsi(mesh, PsiZero, gradPsi);
+    LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+
+    phiR = linearInterpolate( C*k1*( scalar(1.) - k1 )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi )) ) & mesh.Sf();
 
     volScalarField k2  = createKField("k2", runTime, mesh);
+
     k2 = 3./4* T + 1./4* k1 + 1./4* fvc::div(phiR)*dtau;
-    phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  )  & mesh.Sf();
-    T = 1./3*T + 2./3*k2 + 2./3*fvc::div(phiR)*dtau;
 
-    TAnalit = 0.5*(1.+Foam::tanh(Psi/(2.*epsH)));
+    limitT(k2);
+    PsiZero1(k2, PsiZero, eps, epsH, gamma);
+    gradPsi = mag(fvc::grad(PsiZero));
 
-    if (limitFieldT)
-        limitT(T);
+    updateGradPsi(mesh, PsiZero, gradPsi);
+    LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+
+    phiR = linearInterpolate( C*k2*( scalar(1.) - k2 )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi )) ) & mesh.Sf();
+    T =  1./3* T + 2./3* k2 + 2./3*fvc::div(phiR)*dtau;
+
+    limitT(T);
+    PsiZero1(T, PsiZero, eps, epsH, gamma);
+    gradPsi = mag(fvc::grad(PsiZero));
+    updateGradPsi(mesh, PsiZero, gradPsi);
+    LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+
+//    if (limitFieldT)
+//        limitT(T);
 
     double norm1c = Foam::sum(Foam::mag(T-Told)).value() / T.size();
     Info << "Norma 1 = " << norm1c << endl;
 
-    if (mapFunLog)
-        PsiZero1(T, PsiZero, eps, epsH, gamma);
-    else
-        PsiZero2(T, PsiZero, eps, epsH, gamma);
+//    if (mapFunLog)
+//        PsiZero1(T, PsiZero, eps, epsH, gamma);
+//    else
+//        PsiZero2(T, PsiZero, eps, epsH, gamma);
 
-    updateGradPsi(mesh, PsiZero, gradPsi);
-    LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+//    updateGradPsi(mesh, PsiZero, gradPsi);
+//    LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
 
     for(int i = 1; i <= ilekrcz; ++i)
     {
@@ -288,26 +313,56 @@ void exRK3(const volScalarField& C, Time& runTime, const fvMesh& mesh, dimension
 
         Told == T;
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
-        k1 = T + fvc::div(phiR)*dtau;
+        updateGradPsi(mesh, PsiZero, gradPsi);
+        LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
-        k2 = 3./4* T + 1./4* k1 + 1./4* fvc::div(phiR)*dtau;
+        //updateGradPsi(mesh, PsiZero, gradPsi);
+        volScalarField k1 = createKField("k1", runTime, mesh);
 
-        phiR = linearInterpolate( C*T*( scalar(1.) - T )*( gradPsi - scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi  ))  ) & mesh.Sf();
-        T = 1./3*T + 2./3*k2 + 2./3*fvc::div(phiR)*dtau;
+        k1 =  T + fvc::div(phiR)*dtau;
 
-        if (limitFieldT)
-            limitT(T);
-
-        if (mapFunLog)
-            PsiZero1(T, PsiZero, eps, epsH, gamma);
-        else
-            PsiZero2(T, PsiZero, eps, epsH, gamma);
+        limitT(k1);
+        PsiZero1(k1, PsiZero, eps, epsH, gamma);
+        gradPsi = mag(fvc::grad(PsiZero));
 
         updateGradPsi(mesh, PsiZero, gradPsi);
         LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
 
+        phiR = linearInterpolate( C*k1*( scalar(1.) - k1 )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi )) ) & mesh.Sf();
+
+        volScalarField k2  = createKField("k2", runTime, mesh);
+
+        k2 = 3./4* T + 1./4* k1 + 1./4* fvc::div(phiR)*dtau;
+
+        limitT(k2);
+        PsiZero1(k2, PsiZero, eps, epsH, gamma);
+        gradPsi = mag(fvc::grad(PsiZero));
+
+        updateGradPsi(mesh, PsiZero, gradPsi);
+        LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+
+        phiR = linearInterpolate( C*k2*( scalar(1.) - k2 )*( gradPsi- scalar(1.) ) * (fvc::grad(PsiZero) /( gradPsi )) ) & mesh.Sf();
+        T =  1./3* T + 2./3* k2 + 2./3*fvc::div(phiR)*dtau;
+        limitT(T);
+        PsiZero1(T, PsiZero, eps, epsH, gamma);
+        gradPsi = mag(fvc::grad(PsiZero));
+
+        updateGradPsi(mesh, PsiZero, gradPsi);
+        LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
+
+    //    if (limitFieldT)
+    //        limitT(T);
+
+        double norm1c = Foam::sum(Foam::mag(T-Told)).value() / T.size();
+        Info << "Norma 1 = " << norm1c << endl;
+
+//        if (mapFunLog)
+//            PsiZero1(T, PsiZero, eps, epsH, gamma);
+//        else
+//            PsiZero2(T, PsiZero, eps, epsH, gamma);
+
+//        updateGradPsi(mesh, PsiZero, gradPsi);
+//        LimitGradPsi(mesh, PsiZero, gradPsi, 1./ilePkt);
         surfgradT = linearInterpolate( T*(1-T)*(fvc::grad(PsiZero))/epsH ) & mesh.Sf();
         GradT = T*(1-T)*mag(fvc::grad(PsiZero))/epsH;
 
